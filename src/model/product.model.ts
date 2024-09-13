@@ -5,12 +5,16 @@ export interface IProduct extends Document {
   title: string;
   description: string;
   price: number;
-  imageUrl: object;
+  imageUrl: {
+    public_id: string;
+    url: string;
+  };
   ratings: {
     userId: mongoose.Types.ObjectId;
     rating: number;
     review: string;
   }[];
+  userId: mongoose.Types.ObjectId;
 }
 
 const productSchema: Schema<IProduct> = new mongoose.Schema(
@@ -42,6 +46,10 @@ const productSchema: Schema<IProduct> = new mongoose.Schema(
           ref: "User",
           required: true,
         },
+        userName: {
+          type: String,
+          required: true,
+        },
         rating: {
           type: Number,
           min: 1,
@@ -54,6 +62,11 @@ const productSchema: Schema<IProduct> = new mongoose.Schema(
         },
       },
     ],
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "User ID is required."],
+    },
   },
   { timestamps: true }
 );

@@ -2,29 +2,27 @@ import { NextFunction, Request, Response } from "express";
 import productModel from "../model/product.model";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
+import ErrorHandler from "../utils/ErrorHandler";
 
 export const addProduct = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { title, description, price, imageUrl } = req.body;
+  const { title, description, price, image } = req.body;
 
-  if (!title || !description || !price) {
+  if (!title || !description || !price || !image) {
     return res
       .status(400)
       .json({ error: "All fields are required, including image details." });
   }
 
   try {
-    let thumb = {
-      url: "https://res.cloudinary.com/de2xhx2wy/image/upload/v1725597823/courses/i5gcvuunwphhbkakvfpq.png",
-      public_id: "courses/i5gcvuunwphhbkakvfpq",
-    };
+    let thumb = null;
 
-    if (imageUrl) {
+    if (image) {
       try {
-        const myCloud = await cloudinary.v2.uploader.upload(imageUrl, {
+        const myCloud = await cloudinary.v2.uploader.upload(image, {
           folder: "courses",
         });
 
@@ -43,6 +41,7 @@ export const addProduct = async (
       description,
       price,
       imageUrl: thumb,
+      userId: req.user?.id,
     });
 
     res.status(201).json({
@@ -116,14 +115,22 @@ export const updateProduct = async (
   next: NextFunction
 ) => {
   const { id } = req.params;
-  const { title, description, price, imageUrl } = req.body;
+  const data = req.body;
+  const { image } = data;
 
   try {
     let updatedImage = null;
 
-    if (imageUrl) {
+    if (
+      image !== null &&
+      image &&
+      image.public_id &&
+      image.url &&
+      image.url.startsWith("data:image/")
+    ) {
       try {
-        const myCloud = await cloudinary.v2.uploader.upload(imageUrl, {
+        await cloudinary.v2.uploader.destroy(image.public_id);
+        const myCloud = await cloudinary.v2.uploader.upload(image.url, {
           folder: "courses",
         });
 
@@ -140,12 +147,9 @@ export const updateProduct = async (
     const updatedProduct = await productModel.findByIdAndUpdate(
       id,
       {
-        title,
-        description,
-        price,
-        imageUrl: updatedImage || undefined,
+        $set: data,
       },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!updatedProduct) {
@@ -210,9 +214,12 @@ export const addReview = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { userId, productId, rating, review } = req.body;
+  const { id } = req.params;
+  const productId = id;
+  const userId = req?.user?.id;
+  const { rating, review } = req.body;
 
-  if (!productId || rating === undefined || !userId) {
+  if (!productId || !rating || !userId) {
     return res
       .status(400)
       .json({ error: "Product ID, rating, and user ID are required." });
@@ -230,15 +237,14 @@ export const addReview = async (
 
     const userObjectId = new mongoose.Types.ObjectId(userId);
 
-    if (existingReviewIndex > -1) {
-      product.ratings[existingReviewIndex] = {
-        userId: userObjectId,
-        rating,
-        review,
-      };
-    } else {
-      product.ratings.push({ userId: userObjectId, rating, review });
-    }
+    const reviewData: any = {
+      userId: userObjectId,
+      userName: req?.user?.name,
+      rating,
+      review,
+    };
+
+    product.ratings.push(reviewData);
 
     await product.save();
 
@@ -282,5 +288,25 @@ export const getReviews = async (
     return res
       .status(500)
       .json({ error: "An error occurred while retrieving reviews." });
+  }
+};
+
+// get all courses --- only for admin
+export const getAdminAllProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const products = await productModel
+      .find({ userId: req.user?.id })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      products,
+    });
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 400));
   }
 };

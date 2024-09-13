@@ -5,6 +5,8 @@ import userRouter from "./router/user.route";
 import { ErrorMiddleware } from "./middleware/error";
 import productRouter from "./router/product.route";
 import cartRouter from "./router/cart.route";
+import orderRouter from "./router/order.route";
+require("dotenv").config();
 
 const app: Application = express();
 
@@ -20,7 +22,11 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.static(path.join(__dirname, "../", "public")));
 
 // Routes
-app.use("/api/v1", userRouter, productRouter, cartRouter);
+app.use("/api", userRouter, productRouter, cartRouter, orderRouter);
+
+app.get("/api/getkey", (req, res) =>
+  res.status(200).json({ key: process.env.RAZORPAY_API_KEY })
+);
 
 app.get("/", (req: Request, res: Response) => {
   return res.send("It's working 🙌");

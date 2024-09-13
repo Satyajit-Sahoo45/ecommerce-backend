@@ -1,8 +1,14 @@
+import Razorpay from "razorpay";
 import app from "./app";
 import connectDB from "./utils/db";
 import { v2 as cloudinary } from "cloudinary";
 
 require("dotenv").config();
+
+export const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_API_KEY as string,
+  key_secret: process.env.RAZORPAY_API_SECRET,
+});
 
 // cloudinary config
 cloudinary.config({

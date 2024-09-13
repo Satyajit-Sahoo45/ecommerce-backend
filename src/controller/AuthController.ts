@@ -73,3 +73,70 @@ export const login = async (
       .json({ error: "An error occurred. Please try again later." });
   }
 };
+
+export const addAddress = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { street, city, state, country, postalCode } = req.body.data;
+    const userId = req?.user?.id;
+
+    // Validate input
+    if (!userId || !street || !city || !state || !country || !postalCode) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Find the user
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Append new address
+    user.addresses.push({
+      street,
+      city,
+      state,
+      country,
+      postalCode,
+    });
+
+    // Save the user with the new address
+    await user.save();
+
+    res.status(201).json({
+      message: "Address added successfully",
+      addresses: user.addresses,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding address", error });
+  }
+};
+
+export const getAddresses = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req?.user?.id;
+
+    // Validate input
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Find the user
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Respond with the user's addresses
+    res.status(200).json({ addresses: user.addresses });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching addresses", error });
+  }
+};

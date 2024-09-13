@@ -10,7 +10,6 @@ export interface IOrder extends Document {
       qty: number;
       price: number;
       title?: string;
-      productCode?: string;
     }[];
   };
   address: string;

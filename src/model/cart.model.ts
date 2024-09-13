@@ -3,7 +3,6 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface ICart extends Document {
   userId: mongoose.Types.ObjectId;
   items: { productId: mongoose.Types.ObjectId; quantity: number }[];
-  shippingAddress: string[];
 }
 
 const cartSchema: Schema<ICart> = new mongoose.Schema(
@@ -27,10 +26,6 @@ const cartSchema: Schema<ICart> = new mongoose.Schema(
         },
       },
     ],
-    shippingAddress: {
-      type: [String],
-      default: [],
-    },
   },
   { timestamps: true }
 );

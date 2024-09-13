@@ -3,8 +3,10 @@ import {
   addProduct,
   addReview,
   deleteProduct,
+  getAdminAllProducts,
   getAllProducts,
   getProductById,
+  updateProduct,
 } from "../controller/product.controller";
 import { authorizeRoles, isAuthenticated } from "../middleware/auth";
 
@@ -22,10 +24,10 @@ productRouter.get("/products", getAllProducts);
 productRouter.get("/product/:id", getProductById);
 
 productRouter.put(
-  "/product/:id",
+  "/edit-product/:id",
   isAuthenticated,
   authorizeRoles("admin"),
-  getProductById
+  updateProduct
 );
 
 productRouter.delete(
@@ -35,6 +37,13 @@ productRouter.delete(
   deleteProduct
 );
 
-productRouter.post("/add-review", isAuthenticated, addReview);
+productRouter.get(
+  "/get-admin-products",
+  isAuthenticated,
+  authorizeRoles("admin"),
+  getAdminAllProducts
+);
+
+productRouter.put("/add-review/:id", isAuthenticated, addReview);
 
 export default productRouter;

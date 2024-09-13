@@ -95,7 +95,7 @@ userSchema.methods.SignAccessToken = function () {
     role: this.role,
   };
   return jwt.sign(payload, process.env.JWT_SECRET || "", {
-    expiresIn: "5m",
+    expiresIn: "365d",
   });
 };
 

@@ -10,7 +10,7 @@ export const isAuthenticated = (
   next: NextFunction
 ) => {
   const authHeader = req.headers.authorization;
-  if (authHeader === null || authHeader === undefined) {
+  if (!authHeader) {
     return res
       .status(401)
       .json({ status: 400, message: "Please login to access this resourse" });
